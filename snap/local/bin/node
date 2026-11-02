@@ -1,0 +1,3 @@
+#!/bin/sh
+# Electron's built-in Node runs npm and the install scripts of plugins.
+ELECTRON_RUN_AS_NODE=1 exec "$SNAP/opt/picgo/PicGo" "$@"

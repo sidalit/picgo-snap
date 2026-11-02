@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keep the profile, plugins and caches out of revisioned data, so refreshes do not copy them.
+export XDG_CONFIG_HOME="$SNAP_USER_COMMON/.config"
+export XDG_CACHE_HOME="$SNAP_USER_COMMON/.cache"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
+
+# browser-support does not allow Chromium's sandbox; AppArmor confines the snap.
+exec "$SNAP/opt/picgo/PicGo" --no-sandbox "$@"

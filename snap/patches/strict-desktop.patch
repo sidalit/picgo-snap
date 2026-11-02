@@ -1,0 +1,28 @@
+diff --git a/src/main/lifeCycle/fixPath.ts b/src/main/lifeCycle/fixPath.ts
+--- a/src/main/lifeCycle/fixPath.ts
++++ b/src/main/lifeCycle/fixPath.ts
+@@ -8,6 +8,10 @@
+   if (process.platform === 'win32') {
+     return
+   }
++  // The snap's PATH holds its xclip, wl-paste and npm; a login shell's PATH would drop them
++  if (process.env.SNAP) {
++    return
++  }
+ 
+   process.env.PATH = shellPath.sync() || [
+     './node_modules/.bin',
+diff --git a/src/main/utils/updateChecker.ts b/src/main/utils/updateChecker.ts
+--- a/src/main/utils/updateChecker.ts
++++ b/src/main/utils/updateChecker.ts
+@@ -10,6 +10,10 @@
+ const downloadUrl = 'https://github.com/Molunerfinn/PicGo/releases/latest'
+ 
+ const checkVersion = async () => {
++  // snapd updates the snap
++  if (process.env.SNAP) {
++    return false
++  }
+   let showTip = picgo.getConfig<boolean | undefined>('settings.showUpdateTip')
+   if (showTip === undefined) {
+     picgo.saveConfig({ 'settings.showUpdateTip': true })

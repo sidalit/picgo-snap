@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=PicGo
+GenericName=Image Uploader
+Comment=Upload images to image hosts and copy the Markdown link
+Exec=picgo %F
+Icon=${SNAP}/meta/gui/picgo.png
+Terminal=false
+Categories=Utility;Graphics;
+Keywords=image;upload;picture;markdown;screenshot;clipboard;
+StartupNotify=true
+StartupWMClass=picgo

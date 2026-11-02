@@ -1,0 +1,100 @@
+name: picgo
+base: core26
+version: '3.0.3'
+title: PicGo
+icon: snap/gui/picgo.png
+summary: Upload images to image hosts and copy the Markdown link
+description: |
+  PicGo uploads pictures, screenshots and clipboard images to image hosting
+  services such as SM.MS, GitHub, Imgur, Amazon S3, Aliyun OSS, Qiniu and
+  Tencent COS, then copies the link in Markdown, HTML or a custom format.
+  Drop files on the window, paste from the clipboard or use the global
+  shortcut, and browse past uploads in the album.
+
+  A local upload server on 127.0.0.1:36677 lets Typora, Obsidian, VS Code
+  and other editors upload through PicGo. Plugins add more image hosts and
+  are installed from npm inside the snap. Updates are managed by snapd.
+license: MIT
+grade: stable
+confinement: strict
+website: https://picgo.app
+source-code:
+  - https://github.com/Molunerfinn/PicGo
+  - https://github.com/sidalit/picgo-snap
+issues:
+  - https://github.com/Molunerfinn/PicGo/issues
+  - https://github.com/sidalit/picgo-snap/issues
+contact: https://github.com/sidalit/picgo-snap/issues
+
+platforms:
+  amd64:
+
+apps:
+  picgo:
+    command: bin/picgo
+    extensions: [gnome]
+    plugs:
+      - browser-support
+      - home
+      - network
+      - network-bind
+      - removable-media
+      - unity7
+
+parts:
+  pnpm:
+    plugin: nil
+    build-snaps:
+      - node/22/stable
+    override-build: |
+      npm install --global --prefix "$CRAFT_PART_INSTALL" pnpm@10.29.2
+    prime:
+      - -*
+
+  picgo:
+    after: [pnpm]
+    plugin: nil
+    source: https://github.com/Molunerfinn/PicGo.git
+    source-tag: v$SNAPCRAFT_PROJECT_VERSION
+    source-depth: 1
+    build-snaps:
+      - node/22/stable
+    build-packages:
+      - build-essential
+      - ca-certificates
+      - git
+      - patch
+      - python3
+    stage-packages:
+      - fontconfig
+      - libgbm1
+      - wl-clipboard
+      - xclip
+    build-environment:
+      - HUSKY: '0'
+      - SKIP_NOTARIZE: 'true'
+      - NODE_OPTIONS: --max-old-space-size=4096
+    override-pull: |
+      craftctl default
+      patch -p1 < "$CRAFT_PROJECT_DIR/snap/patches/strict-desktop.patch"
+    override-build: |
+      export PATH="$CRAFT_STAGE/bin:$PATH"
+      pnpm install --frozen-lockfile
+      pnpm run build
+      # Wayland app ID matching the snap's desktop entry
+      pnpm exec electron-builder --config electron-builder.config.ts \
+        --linux dir --x64 --publish never \
+        -c.extraMetadata.desktopName=picgo_picgo.desktop
+
+      mkdir -p "$CRAFT_PART_INSTALL/opt/picgo"
+      cp -a dist/linux-unpacked/. "$CRAFT_PART_INSTALL/opt/picgo/"
+      rm "$CRAFT_PART_INSTALL/opt/picgo/chrome-sandbox"
+      install -Dm644 LICENSE "$CRAFT_PART_INSTALL/usr/share/doc/picgo/LICENSE"
+
+      # Plugins are installed with npm, which runs on Electron's own Node
+      mkdir -p "$CRAFT_PART_INSTALL/opt/npm"
+      cp -a /snap/node/current/lib/node_modules/npm/. "$CRAFT_PART_INSTALL/opt/npm/"
+
+  launcher:
+    plugin: dump
+    source: snap/local
