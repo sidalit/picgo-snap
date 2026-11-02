@@ -28,6 +28,7 @@ contact: https://github.com/sidalit/picgo-snap/issues
 
 platforms:
   amd64:
+  arm64:
 
 apps:
   picgo:
@@ -81,17 +82,20 @@ parts:
       export PATH="$CRAFT_STAGE/bin:$PATH"
       pnpm install --frozen-lockfile
       pnpm run build
-      # Wayland app ID matching the snap's desktop entry
+      case "$CRAFT_ARCH_BUILD_FOR" in
+        amd64) arch=x64; output=linux-unpacked ;;
+        arm64) arch=arm64; output=linux-arm64-unpacked ;;
+      esac
       pnpm exec electron-builder --config electron-builder.config.ts \
-        --linux dir --x64 --publish never \
+        --linux dir --"$arch" --publish never \
         -c.extraMetadata.desktopName=picgo_picgo.desktop
 
       mkdir -p "$CRAFT_PART_INSTALL/opt/picgo"
-      cp -a dist/linux-unpacked/. "$CRAFT_PART_INSTALL/opt/picgo/"
+      cp -a "dist/$output/." "$CRAFT_PART_INSTALL/opt/picgo/"
       rm "$CRAFT_PART_INSTALL/opt/picgo/chrome-sandbox"
       install -Dm644 LICENSE "$CRAFT_PART_INSTALL/usr/share/doc/picgo/LICENSE"
 
-      # Plugins are installed with npm, which runs on Electron's own Node
+      # Plugin installation uses Electron's Node runtime.
       mkdir -p "$CRAFT_PART_INSTALL/opt/npm"
       cp -a /snap/node/current/lib/node_modules/npm/. "$CRAFT_PART_INSTALL/opt/npm/"
 

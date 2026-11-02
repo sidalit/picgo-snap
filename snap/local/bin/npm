@@ -1,6 +1,4 @@
 #!/bin/sh
-# PicGo installs plugins with npm; keep its cache out of revisioned data.
 export npm_config_cache="$SNAP_USER_COMMON/.npm"
-# snapd updates the snap, including npm
 export npm_config_update_notifier=false
 exec "$SNAP/bin/node" "$SNAP/opt/npm/bin/npm-cli.js" "$@"
